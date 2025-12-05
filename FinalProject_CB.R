@@ -3,6 +3,7 @@ library(haven)
 library(janitor)
 library(broom)
 library(DescTools)
+library(epitools)
 
 # Load dataset
 wave33 <- read_sav("ATP W33.sav")
@@ -70,5 +71,9 @@ BreslowDayTest(table3d)
 
 #-- Stratum-specific OR ---
 analysis_df %>%
-  group_split(clim_belief) %>%
-  map(~ epitools::oddsratio(table(.x$climate_impact, .x$envreg_support)))
+  group_by(clim_belief) %>%
+  group_map(~ {
+    tab <- table(.x$climate_impact, .x$envreg_support)
+    or <- oddsratio(tab, method = "wald")
+    or
+  })
