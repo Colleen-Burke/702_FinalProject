@@ -1,4 +1,3 @@
-# Load Libraries ---------------------------------------------------------------
 library(tidyverse)
 library(haven)
 library(broom)
@@ -10,7 +9,7 @@ wave33 <- read_sav("ATP W33.sav")
 
 
 # Data Cleaning ----------------------------------------------------------------
-analysis_df <- wave33 %>%
+analysis_df <- wave33 |>
   mutate(
     # Predictor: Personal climate change impact (1=Yes, 0=No)
     climate_impact = case_when(
@@ -19,7 +18,8 @@ analysis_df <- wave33 %>%
       TRUE ~ NA_real_
     ),
     
-    # Outcome: Support for strong environmental regulations (1=Cannot cut, 0=Can cut)
+    # Outcome: Support for strong environmental regulations 
+    # (1=Cannot cut, 0=Can cut)
     envreg_support = case_when(
       ENVIR7_W33 == 2 ~ 1,
       ENVIR7_W33 == 1 ~ 0,
@@ -33,8 +33,9 @@ analysis_df <- wave33 %>%
       CLIM1A_W33 == 3 ~ "NoEvidence",
       TRUE ~ NA_character_
     ),
-    clim_belief = factor(clim_belief, levels = c("Human", "Natural", "NoEvidence"))
-  ) %>%
+    clim_belief = factor(clim_belief, 
+                         levels = c("Human", "Natural", "NoEvidence"))
+  ) |> 
   drop_na(climate_impact, envreg_support, clim_belief)
 
 
@@ -45,7 +46,7 @@ table(analysis_df$envreg_support)
 table(analysis_df$clim_belief)
 
 
-# OUTPUT 1: Chi-Square Test ----------------------------------------------------
+# Output 1: Chi-Square Test ----------------------------------------------------
 table2x2 <- table(analysis_df$climate_impact, analysis_df$envreg_support)
 rownames(table2x2) <- c("Not Impacted", "Impacted")
 colnames(table2x2) <- c("Can Cut Regs", "Cannot Cut Regs")
@@ -64,7 +65,7 @@ if(all(chisq_test$expected >= 5)) {
 }
 
 
-# OUTPUT 2: Logistic Regression ------------------------------------------------
+# Output 2: Logistic Regression ------------------------------------------------
 logit_mod <- glm(envreg_support ~ climate_impact,
                  data = analysis_df,
                  family = binomial)
@@ -72,16 +73,16 @@ logit_mod <- glm(envreg_support ~ climate_impact,
 tidy(logit_mod, exponentiate = TRUE, conf.int = TRUE)
 
 
-# OUTPUT 3: Cochran-Mantel-Haenszel Test ---------------------------------------
+# Output 3: Cochran-Mantel-Haenszel Test ---------------------------------------
 table3d <- xtabs(~ climate_impact + envreg_support + clim_belief,
                  data = analysis_df)
-
 table3d
+
 cmh_result <- mantelhaen.test(table3d, correct = FALSE)
 cmh_result
 
 
-# OUTPUT 4: Breslow-Day Test ---------------------------------------------------
+# Output 4: Breslow-Day Test ---------------------------------------------------
 bd_result <- BreslowDayTest(table3d)
 bd_result
 
@@ -89,22 +90,22 @@ bd_result
 # OUTPUT 5: Stratum-Specific Odds Ratios ---------------------------------------
 
 # Sample sizes per stratum
-analysis_df %>%
-  group_by(clim_belief) %>%
+analysis_df |> 
+  group_by(clim_belief) |> 
   summarize(n = n())
 
 # Human causes
-human_tab <- analysis_df %>%
-  filter(clim_belief == "Human") %>%
-  {table(.$climate_impact, .$envreg_support)}
+analysis_df |> 
+  filter(clim_belief == "Human") |> 
+  with(table(climate_impact, envreg_support))
 
 human_tab
 human_or <- oddsratio.wald(human_tab)
 human_or
 
 # Natural patterns
-natural_tab <- analysis_df %>%
-  filter(clim_belief == "Natural") %>%
+natural_tab <- analysis_df |> 
+  filter(clim_belief == "Natural") |> 
   {table(.$climate_impact, .$envreg_support)}
 
 natural_tab
@@ -112,8 +113,8 @@ natural_or <- oddsratio.wald(natural_tab)
 natural_or
 
 # No evidence (Fisher's exact test for small sample)
-noevidence_tab <- analysis_df %>%
-  filter(clim_belief == "NoEvidence") %>%
+noevidence_tab <- analysis_df |> 
+  filter(clim_belief == "NoEvidence") |> 
   {table(.$climate_impact, .$envreg_support)}
 
 noevidence_tab
@@ -146,4 +147,8 @@ stratum_summary <- data.frame(
   )
 )
 
-round(stratum_summary, 3)
+# Round only numeric columns
+stratum_summary |> 
+  mutate(across(where(is.numeric), ~round(.x, 3)))
+
+
