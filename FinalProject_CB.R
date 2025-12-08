@@ -44,7 +44,7 @@ table(analysis_df$envreg_support)
 table(analysis_df$clim_belief)
 
 
-# OUTPUT 1: Chi-Square Test ----------------------------------------------------
+# Output 1: Chi-Square Test ----------------------------------------------------
 table2x2 <- table(analysis_df$climate_impact, analysis_df$envreg_support)
 rownames(table2x2) <- c("Not Impacted", "Impacted")
 colnames(table2x2) <- c("Can Cut Regs", "Cannot Cut Regs")
@@ -56,7 +56,7 @@ chisq_result <- chisq.test(table2x2, correct = FALSE)
 chisq_result
 
 
-#--- Logistic Regression ---
+# Output 2: Logistic Regression ------------------------------------------------
 logit_mod <- glm(envreg_support ~ climate_impact,
                  data = analysis_df,
                  family = binomial)
@@ -64,16 +64,18 @@ logit_mod <- glm(envreg_support ~ climate_impact,
 tidy(logit_mod, exponentiate = TRUE, conf.int = TRUE)
 
 
-#--- CMH Test ---
+# Output 3: Cochran-Mantel-Haenszel Test ---------------------------------------
 table3d <- xtabs(~ climate_impact + envreg_support + clim_belief,
                  data = analysis_df)
 
-mantelhaen.test(table3d)
+table3d
+cmh_result <- mantelhaen.test(table3d, correct = FALSE)
+cmh_result
 
 
-#--- Breslow-Day test for heterogeneity ---
-BreslowDayTest(table3d)
-
+# Output 4: Breslow-Day Test ---------------------------------------------------
+bd_result <- BreslowDayTest(table3d)
+bd_result
 
 
 #-- Stratum-specific OR ---
