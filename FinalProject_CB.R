@@ -44,13 +44,16 @@ table(analysis_df$envreg_support)
 table(analysis_df$clim_belief)
 
 
-
-#--- 2x2 table and chi-square test ---
+# OUTPUT 1: Chi-Square Test ----------------------------------------------------
 table2x2 <- table(analysis_df$climate_impact, analysis_df$envreg_support)
-table2x2
+rownames(table2x2) <- c("Not Impacted", "Impacted")
+colnames(table2x2) <- c("Can Cut Regs", "Cannot Cut Regs")
 
-chisq_res <- chisq.test(table2x2)
-chisq_res
+table2x2
+prop.table(table2x2, margin = 1)  # Row percentages
+
+chisq_result <- chisq.test(table2x2, correct = FALSE)
+chisq_result
 
 
 #--- Logistic Regression ---
