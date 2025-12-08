@@ -95,7 +95,7 @@ analysis_df |>
   summarize(n = n())
 
 # Human causes
-analysis_df |> 
+human_tab <- analysis_df |> 
   filter(clim_belief == "Human") |> 
   with(table(climate_impact, envreg_support))
 
@@ -106,7 +106,7 @@ human_or
 # Natural patterns
 natural_tab <- analysis_df |> 
   filter(clim_belief == "Natural") |> 
-  {table(.$climate_impact, .$envreg_support)}
+  with(table(climate_impact, envreg_support))
 
 natural_tab
 natural_or <- oddsratio.wald(natural_tab)
@@ -115,7 +115,7 @@ natural_or
 # No evidence (Fisher's exact test for small sample)
 noevidence_tab <- analysis_df |> 
   filter(clim_belief == "NoEvidence") |> 
-  {table(.$climate_impact, .$envreg_support)}
+  with(table(climate_impact, envreg_support))
 
 noevidence_tab
 noevidence_or <- fisher.test(noevidence_tab)
