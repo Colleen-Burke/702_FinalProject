@@ -99,10 +99,14 @@ analysis_df %>%
   {table(.$climate_impact, .$envreg_support)} %>%
   oddsratio(method = "wald")
 
-# No evidence
-analysis_df %>%
+# No evidence (use Fisher's exact OR due to small sample size)
+noevidence_tab <- analysis_df %>%
   filter(clim_belief == "NoEvidence") %>%
-  {table(.$climate_impact, .$envreg_support)} %>%
-  oddsratio(method = "wald")
+  {table(.$climate_impact, .$envreg_support)}
+noevidence_tab
+# Fisher's exact test provides exact OR and p-value for small samples
+fisher.test(noevidence_tab)
+
+
 
 
