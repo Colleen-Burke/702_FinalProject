@@ -1,44 +1,48 @@
 library(tidyverse)
 library(haven)
-library(janitor)
 library(broom)
 library(DescTools)
 library(epitools)
 
-# Load dataset
+# Load Data --------------------------------------------------------------------
 wave33 <- read_sav("ATP W33.sav")
 
-#--- Data Cleaning ---
-# Recode variables
+
+# Data Cleaning ----------------------------------------------------------------
 analysis_df <- wave33 %>%
   mutate(
-    # Predictor: personal impact of climate change (CLIM11_W33)
+    # Predictor: Personal climate change impact (1=Yes, 0=No)
     climate_impact = case_when(
-      CLIM11_W33 == 1 ~ 1,   # Yes, impacted personally
-      CLIM11_W33 == 2 ~ 0,   # No, not impacted
+      CLIM11_W33 == 1 ~ 1,
+      CLIM11_W33 == 2 ~ 0,
       TRUE ~ NA_real_
     ),
     
-    # Outcome: belief that regulations cannot be cut (ENVIR7_W33)
+    # Outcome: Support for strong environmental regulations (1=Cannot cut, 0=Can cut)
     envreg_support = case_when(
-      ENVIR7_W33 == 2 ~ 1,   # NOT possible to cut regs (supports strong regulation)
-      ENVIR7_W33 == 1 ~ 0,   # YES possible to cut regs (less support)
+      ENVIR7_W33 == 2 ~ 1,
+      ENVIR7_W33 == 1 ~ 0,
       TRUE ~ NA_real_
     ),
     
-    # Stratifier: climate belief (CLIM1A_W33)
+    # Stratifier: Climate change belief
     clim_belief = case_when(
       CLIM1A_W33 == 1 ~ "Human",
       CLIM1A_W33 == 2 ~ "Natural",
       CLIM1A_W33 == 3 ~ "NoEvidence",
       TRUE ~ NA_character_
-    )
-  ) %>%
-  mutate(
-    clim_belief = factor(clim_belief, 
-                         levels = c("Human", "Natural", "NoEvidence"))
+    ),
+    clim_belief = factor(clim_belief, levels = c("Human", "Natural", "NoEvidence"))
   ) %>%
   drop_na(climate_impact, envreg_support, clim_belief)
+
+
+# Descriptive Statistics -------------------------------------------------------
+nrow(analysis_df)  # Sample size
+table(analysis_df$climate_impact)
+table(analysis_df$envreg_support)
+table(analysis_df$clim_belief)
+
 
 
 #--- 2x2 table and chi-square test ---
