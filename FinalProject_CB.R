@@ -44,7 +44,7 @@ table(analysis_df$envreg_support)
 table(analysis_df$clim_belief)
 
 
-# Output 1: Chi-Square Test ----------------------------------------------------
+# OUTPUT 1: Chi-Square Test ----------------------------------------------------
 table2x2 <- table(analysis_df$climate_impact, analysis_df$envreg_support)
 rownames(table2x2) <- c("Not Impacted", "Impacted")
 colnames(table2x2) <- c("Can Cut Regs", "Cannot Cut Regs")
@@ -52,9 +52,16 @@ colnames(table2x2) <- c("Can Cut Regs", "Cannot Cut Regs")
 table2x2
 prop.table(table2x2, margin = 1)  # Row percentages
 
-chisq_result <- chisq.test(table2x2, correct = FALSE)
-chisq_result
+# Check expected counts
+chisq_test <- chisq.test(table2x2, correct = FALSE)
+chisq_test$expected
 
+# Use chi-square if all expected counts >= 5, otherwise use Fisher's exact test
+if(all(chisq_test$expected >= 5)) {
+  chisq_test
+} else {
+  fisher.test(table2x2)  # Fisher's exact test for small samples
+}
 
 # Output 2: Logistic Regression ------------------------------------------------
 logit_mod <- glm(envreg_support ~ climate_impact,
@@ -78,11 +85,24 @@ bd_result <- BreslowDayTest(table3d)
 bd_result
 
 
-#-- Stratum-specific OR ---
+# OUTPUT 5: Stratum-Specific Odds Ratios ---------------------------------------
+
+# Human causes
 analysis_df %>%
-  group_by(clim_belief) %>%
-  group_map(~ {
-    tab <- table(.x$climate_impact, .x$envreg_support)
-    or <- oddsratio(tab, method = "wald")
-    or
-  })
+  filter(clim_belief == "Human") %>%
+  {table(.$climate_impact, .$envreg_support)} %>%
+  oddsratio(method = "wald")
+
+# Natural patterns
+analysis_df %>%
+  filter(clim_belief == "Natural") %>%
+  {table(.$climate_impact, .$envreg_support)} %>%
+  oddsratio(method = "wald")
+
+# No evidence
+analysis_df %>%
+  filter(clim_belief == "NoEvidence") %>%
+  {table(.$climate_impact, .$envreg_support)} %>%
+  oddsratio(method = "wald")
+
+
